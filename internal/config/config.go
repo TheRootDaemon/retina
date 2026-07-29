@@ -13,15 +13,17 @@ import (
 // Each field maps to a TOML section
 // in the config file.
 type Config struct {
-	Salt   string       `toml:"salt"`
-	Vault  string       `toml:"vault"`
-	Logger LoggerConfig `toml:"logger"`
+	Salt     string         `toml:"salt"`
+	Vault    string         `toml:"vault"`
+	Logger   LoggerConfig   `toml:"logger"`
+	Database DatabaseConfig `toml:"database"`
 }
 
 // Default returns a Config populated with default values.
 func Default() Config {
 	return Config{
-		Logger: DefaultLoggerConfig(),
+		Logger:   DefaultLoggerConfig(),
+		Database: DefaultDatabaseConfig(),
 	}
 }
 

@@ -50,6 +50,11 @@ func Logger() LoggerConfig {
 	return C().Logger
 }
 
+// Database returns the database configuration from the global singleton.
+func Database() DatabaseConfig {
+	return C().Database
+}
+
 // ResetForTesting clears the global config singleton.
 // This function is only intended for use by tests.
 func ResetForTesting() {

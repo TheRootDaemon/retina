@@ -14,6 +14,7 @@ func TestDefault(t *testing.T) {
 	cfg := Default()
 
 	assert.Equal(t, DefaultLoggerConfig(), cfg.Logger)
+	assert.Equal(t, DefaultDatabaseConfig(), cfg.Database)
 	assert.Empty(t, cfg.Salt)
 	assert.Empty(t, cfg.Vault)
 }
@@ -33,6 +34,7 @@ func TestDefaultConfigRoundTrip(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, DefaultLoggerConfig(), cfg.Logger)
+	assert.Equal(t, DefaultDatabaseConfig(), cfg.Database)
 	assert.Equal(t, Default().Salt, cfg.Salt)
 	assert.Equal(t, Default().Vault, cfg.Vault)
 }
@@ -93,6 +95,7 @@ func TestLoadConfig(t *testing.T) {
 			input: "",
 			check: func(t *testing.T, cfg *Config) {
 				assert.Equal(t, DefaultLoggerConfig(), cfg.Logger)
+				assert.Equal(t, DefaultDatabaseConfig(), cfg.Database)
 				assert.Empty(t, cfg.Salt)
 				assert.Empty(t, cfg.Vault)
 			},
@@ -128,6 +131,13 @@ func TestLoadConfig(t *testing.T) {
 			},
 		},
 		{
+			name:  "database path override",
+			input: "[database]\npath = \"/custom/db.sqlite\"\n",
+			check: func(t *testing.T, cfg *Config) {
+				assert.Equal(t, "/custom/db.sqlite", cfg.Database.Path)
+			},
+		},
+		{
 			name:    "malformed toml",
 			input:   "invalid toml content {{{",
 			wantErr: true,
@@ -149,13 +159,14 @@ func TestLoadConfig(t *testing.T) {
 		},
 		{
 			name:  "all fields overridden",
-			input: "salt = \"s\"\nvault = \"v\"\n[logger]\nenabled = true\nlevel = \"warn\"\nfile = \"/custom.log\"\n",
+			input: "salt = \"s\"\nvault = \"v\"\n[logger]\nenabled = true\nlevel = \"warn\"\nfile = \"/custom.log\"\n[database]\npath = \"/my.db\"\n",
 			check: func(t *testing.T, cfg *Config) {
 				assert.Equal(t, "s", cfg.Salt)
 				assert.Equal(t, "v", cfg.Vault)
 				assert.True(t, cfg.Logger.Enabled)
 				assert.Equal(t, "warn", cfg.Logger.Level)
 				assert.Equal(t, "/custom.log", cfg.Logger.File)
+				assert.Equal(t, "/my.db", cfg.Database.Path)
 			},
 		},
 	}

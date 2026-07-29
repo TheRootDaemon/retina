@@ -51,6 +51,24 @@ level = "debug"
 	assert.True(t, cfg.Logger.Enabled)
 }
 
+func TestInitialize_withDatabaseOverride(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.toml")
+	err := os.WriteFile(path, []byte(`[database]
+path = ":memory:"
+`), 0o600)
+	require.NoError(t, err)
+
+	ResetForTesting()
+	defer ResetForTesting()
+
+	t.Setenv("HOP_CONFIG", path)
+	err = Initialize()
+	require.NoError(t, err)
+
+	assert.Equal(t, ":memory:", Database().Path)
+}
+
 func TestInitialize_MissingFileDefaults(t *testing.T) {
 	ResetForTesting()
 	defer ResetForTesting()
@@ -157,6 +175,29 @@ func TestLogger_AccessorAfterInitialize(t *testing.T) {
 	lc := Logger()
 	assert.True(t, lc.Enabled)
 	assert.Equal(t, "trace", lc.Level)
+}
+
+func TestDatabase_Accessor(t *testing.T) {
+	ResetForTesting()
+	defer ResetForTesting()
+
+	dc := Database()
+	assert.Equal(t, DefaultDatabaseConfig(), dc)
+}
+
+func TestDatabase_AccessorAfterInitialize(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.toml")
+	require.NoError(t, os.WriteFile(path, []byte("[database]\npath = \"/custom/db.sqlite\"\n"), 0o600))
+
+	ResetForTesting()
+	defer ResetForTesting()
+
+	t.Setenv("HOP_CONFIG", path)
+	require.NoError(t, Initialize())
+
+	dc := Database()
+	assert.Equal(t, "/custom/db.sqlite", dc.Path)
 }
 
 func TestResetForTesting(t *testing.T) {
