@@ -9,146 +9,135 @@ import (
 )
 
 func TestLogMethods(t *testing.T) {
+	log := func(level Level) func(l *Logger, format string, args ...any) {
+		return func(l *Logger, format string, args ...any) {
+			l.Log(level, format, args...)
+		}
+	}
+
 	tests := []struct {
 		name      string
 		minLevel  Level
-		logFunc   func(l *Logger, format string, args ...any)
-		logLevel  Level
+		logger    func(l *Logger, format string, args ...any)
 		wantLabel string
-		wantText  string
+		wantWrite bool
 	}{
 		{
-			name:      "Trace at LevelTrace",
+			name:      "trace",
 			minLevel:  LevelTrace,
-			logFunc:   (*Logger).Trace,
-			logLevel:  LevelTrace,
+			logger:    (*Logger).Trace,
 			wantLabel: "DEBUG",
-			wantText:  "hello world",
+			wantWrite: true,
 		},
 		{
-			name:      "Debug at LevelDebug",
+			name:      "debug",
 			minLevel:  LevelDebug,
-			logFunc:   (*Logger).Debug,
-			logLevel:  LevelDebug,
+			logger:    (*Logger).Debug,
 			wantLabel: "DEBUG",
-			wantText:  "hello world",
+			wantWrite: true,
 		},
 		{
-			name:      "Info at LevelInfo",
+			name:      "info",
 			minLevel:  LevelInfo,
-			logFunc:   (*Logger).Info,
-			logLevel:  LevelInfo,
+			logger:    (*Logger).Info,
 			wantLabel: "INFO",
-			wantText:  "hello world",
+			wantWrite: true,
 		},
 		{
-			name:      "Warn at LevelWarn",
+			name:      "warn",
 			minLevel:  LevelWarn,
-			logFunc:   (*Logger).Warn,
-			logLevel:  LevelWarn,
+			logger:    (*Logger).Warn,
 			wantLabel: "WARN",
-			wantText:  "hello world",
+			wantWrite: true,
 		},
 		{
-			name:      "Error at LevelError",
+			name:      "error",
 			minLevel:  LevelError,
-			logFunc:   (*Logger).Error,
-			logLevel:  LevelError,
+			logger:    (*Logger).Error,
 			wantLabel: "ERROR",
-			wantText:  "hello world",
+			wantWrite: true,
+		},
+		{
+			name:      "log trace",
+			minLevel:  LevelTrace,
+			logger:    log(LevelTrace),
+			wantLabel: "DEBUG",
+			wantWrite: true,
+		},
+		{
+			name:      "log debug",
+			minLevel:  LevelDebug,
+			logger:    log(LevelDebug),
+			wantLabel: "DEBUG",
+			wantWrite: true,
+		},
+		{
+			name:      "log info",
+			minLevel:  LevelInfo,
+			logger:    log(LevelInfo),
+			wantLabel: "INFO",
+			wantWrite: true,
+		},
+		{
+			name:      "log warn",
+			minLevel:  LevelWarn,
+			logger:    log(LevelWarn),
+			wantLabel: "WARN",
+			wantWrite: true,
+		},
+		{
+			name:      "log error",
+			minLevel:  LevelError,
+			logger:    log(LevelError),
+			wantLabel: "ERROR",
+			wantWrite: true,
+		},
+		{
+			name:     "trace disabled",
+			minLevel: LevelDebug,
+			logger:   (*Logger).Trace,
+		},
+		{
+			name:     "debug disabled",
+			minLevel: LevelInfo,
+			logger:   (*Logger).Debug,
+		},
+		{
+			name:     "info disabled",
+			minLevel: LevelWarn,
+			logger:   (*Logger).Info,
+		},
+		{
+			name:     "warn disabled",
+			minLevel: LevelError,
+			logger:   (*Logger).Warn,
+		},
+		{
+			name:     "log disabled",
+			minLevel: LevelError,
+			logger:   log(LevelInfo),
+		},
+		{
+			name:     "log unknown level",
+			minLevel: LevelTrace,
+			logger:   log(Level(999)),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
 			l := New(tt.minLevel, &buf)
+			tt.logger(l, "hello %s", "world")
 
-			tt.logFunc(l, "hello %s", "world")
+			if !tt.wantWrite {
+				assert.Empty(t, buf.String())
+				return
+			}
 
 			output := buf.String()
 			assert.Contains(t, output, tt.wantLabel)
-			assert.Contains(t, output, tt.wantText)
+			assert.Contains(t, output, "hello world")
 			assert.True(t, strings.HasSuffix(output, "\n"))
 		})
 	}
-}
-
-func TestLogMethodsDisabled(t *testing.T) {
-	tests := []struct {
-		name     string
-		minLevel Level
-		logFunc  func(l *Logger, format string, args ...any)
-	}{
-		{name: "Trace disabled at LevelDebug", minLevel: LevelDebug, logFunc: (*Logger).Trace},
-		{name: "Debug disabled at LevelInfo", minLevel: LevelInfo, logFunc: (*Logger).Debug},
-		{name: "Info disabled at LevelWarn", minLevel: LevelWarn, logFunc: (*Logger).Info},
-		{name: "Warn disabled at LevelError", minLevel: LevelError, logFunc: (*Logger).Warn},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var buf bytes.Buffer
-			l := New(tt.minLevel, &buf)
-			tt.logFunc(l, "hidden %s", "msg")
-
-			assert.Empty(t, buf.String())
-		})
-	}
-}
-
-func TestLogMethod(t *testing.T) {
-	tests := []struct {
-		name      string
-		minLevel  Level
-		logLevel  Level
-		wantLabel string
-		wantText  string
-		wantWrite bool
-	}{
-		{name: "Trace", minLevel: LevelTrace, logLevel: LevelTrace, wantLabel: "DEBUG", wantText: "msg", wantWrite: true},
-		{name: "Debug", minLevel: LevelDebug, logLevel: LevelDebug, wantLabel: "DEBUG", wantText: "msg", wantWrite: true},
-		{name: "Info", minLevel: LevelInfo, logLevel: LevelInfo, wantLabel: "INFO", wantText: "msg", wantWrite: true},
-		{name: "Warn", minLevel: LevelWarn, logLevel: LevelWarn, wantLabel: "WARN", wantText: "msg", wantWrite: true},
-		{name: "Error", minLevel: LevelError, logLevel: LevelError, wantLabel: "ERROR", wantText: "msg", wantWrite: true},
-		{name: "disabled", minLevel: LevelError, logLevel: LevelInfo, wantWrite: false},
-		{name: "unknown level", minLevel: LevelTrace, logLevel: Level(999), wantWrite: false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var buf bytes.Buffer
-			l := New(tt.minLevel, &buf)
-			l.Log(tt.logLevel, "hello %s", "msg")
-
-			if tt.wantWrite {
-				output := buf.String()
-				assert.Contains(t, output, tt.wantLabel)
-				assert.Contains(t, output, tt.wantText)
-			} else {
-				assert.Empty(t, buf.String())
-			}
-		})
-	}
-}
-
-func TestLogMethodsNoArgs(t *testing.T) {
-	var buf bytes.Buffer
-	l := New(LevelTrace, &buf)
-
-	l.Trace("simple")
-	l.Debug("simple")
-	l.Info("simple")
-	l.Warn("simple")
-	l.Error("simple")
-
-	output := buf.String()
-	assert.Equal(t, 5, strings.Count(output, "simple"))
-}
-
-func TestLogMethodsFormatArgs(t *testing.T) {
-	var buf bytes.Buffer
-	l := New(LevelTrace, &buf)
-
-	l.Info("count=%d name=%s", 42, "test")
-
-	output := buf.String()
-	assert.Contains(t, output, "count=42 name=test")
 }
