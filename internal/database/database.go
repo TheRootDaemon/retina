@@ -7,12 +7,19 @@ import (
 	"gorm.io/gorm"
 )
 
+// migrate applies the database schema migrations
+// for the application's models.
 var migrate = func(db *gorm.DB) error {
 	return db.AutoMigrate(
 		&model.Host{},
 	)
 }
 
+// Connect opens a database connection
+// and runs the database migrations.
+//
+// If the database cannot be opened or the migrations fail,
+// Connect returns the corresponding error and no database handle.
 func Connect(path string) (*gorm.DB, error) {
 	logger.Debug("connecting to database at %s", path)
 

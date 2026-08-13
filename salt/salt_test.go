@@ -153,3 +153,64 @@ func TestLoadOrCreate_NonNotExistError(t *testing.T) {
 	_, err := LoadOrCreate(path)
 	assert.ErrorIs(t, err, ErrInvalidSalt)
 }
+
+func TestOpenRoot(t *testing.T) {
+	tests := []struct {
+		name     string
+		path     func(t *testing.T) string
+		wantFile string
+		wantErr  bool
+	}{
+		{
+			name: "file in temp dir",
+			path: func(t *testing.T) string {
+				p := filepath.Join(t.TempDir(), "salt.bin")
+				require.NoError(t, os.WriteFile(p, nil, 0o600))
+				return p
+			},
+			wantFile: "salt.bin",
+		},
+		{
+			name: "file in nested dir",
+			path: func(t *testing.T) string {
+				p := filepath.Join(t.TempDir(), "a", "b", "salt.bin")
+				require.NoError(t, os.MkdirAll(filepath.Dir(p), 0o750))
+				require.NoError(t, os.WriteFile(p, nil, 0o600))
+				return p
+			},
+			wantFile: "salt.bin",
+		},
+		{
+			name: "missing root dir",
+			path: func(t *testing.T) string {
+				return filepath.Join(t.TempDir(), "nope", "salt.bin")
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			path := tt.path(t)
+			r, file, err := openRoot(path)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Nil(t, r)
+				return
+			}
+
+			require.NoError(t, err)
+			require.NotNil(t, r)
+			assert.Equal(t, tt.wantFile, file)
+			defer func() {
+				_ = r.Close()
+			}()
+
+			f, err := r.Open(file)
+			assert.NoError(t, err)
+			if f != nil {
+				_ = f.Close()
+			}
+		})
+	}
+}

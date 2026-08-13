@@ -127,6 +127,9 @@ func LoadOrCreate(path string) ([]byte, error) {
 	return salt, nil
 }
 
+// openRoot opens the directory containing path
+// as an [os.Root] and returns the root
+// along with the base name of path.
 func openRoot(path string) (*os.Root, string, error) {
 	root := filepath.Dir(path)
 	file := filepath.Base(path)
