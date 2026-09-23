@@ -3,14 +3,14 @@ package logger
 import (
 	"os"
 
-	"github.com/therootdaemon/hop/internal/config"
 	"go.uber.org/zap"
 )
 
-// defaultLogger is the package-level Logger used by the
-// convenience functions. It starts as a no-op logger that
-// discards output. Call SetDefault to replace it with a
-// real logger after loading configuration.
+// defaultLogger is the package-level Logger
+// used by the convenience functions.
+// It starts as a no-op logger that discards output.
+// Call SetDefault to replace it with a real logger
+// after loading configuration.
 var defaultLogger = &Logger{
 	sugar: zap.NewNop().Sugar(),
 	level: LevelInfo,
@@ -21,10 +21,9 @@ func SetDefault(l *Logger) {
 	defaultLogger = l
 }
 
-// SetDefaultFromConfig creates a Logger from config and
-// sets it as the package-level default logger.
-func SetDefaultFromConfig(cfg config.LoggerConfig) {
-	SetDefault(NewFromConfig(cfg))
+// Close flushes any buffered log entries on the default logger.
+func Close() error {
+	return defaultLogger.Close()
 }
 
 // Enabled reports whether the given level is enabled
@@ -58,21 +57,11 @@ func Error(format string, args ...any) {
 	defaultLogger.Error(format, args...)
 }
 
-// Exit logs at LevelError via the default logger and
-// terminates the process with code 1.
-func Exit(format string, args ...any) {
+// Exit logs at LevelError via the default logger
+// and terminates the process with the given exit code.
+func Exit(code int, format string, args ...any) {
 	defaultLogger.Error(format, args...)
-	exit(1)
-}
-
-// Close flushes any buffered log entries on the default logger.
-func Close() error {
-	return defaultLogger.Close()
-}
-
-// Log logs at the given level via the default logger.
-func Log(level Level, format string, args ...any) {
-	defaultLogger.Log(level, format, args...)
+	exit(code)
 }
 
 // exit is a package-level variable so tests can replace it.

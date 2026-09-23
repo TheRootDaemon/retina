@@ -4,16 +4,13 @@ PKGS_WITH_TESTS := $(shell go list -f '{{if .TestGoFiles}}{{.ImportPath}}{{end}}
 
 VERSION := $(shell git describe --tags --always 2>/dev/null || echo "dev")
 
-#
 # Build targets
-#
-
 .PHONY: build
 build:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
 	go build \
 		-trimpath \
-		-ldflags="-s -w -X github.com/therootdaemon/hop/version.Version=$(VERSION)" \
+		-ldflags="-s -w -X github.com/therootdaemon/retina/version.Version=$(VERSION)" \
 		-o bin/hop \
 		./main.go
 
@@ -22,13 +19,10 @@ install:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
 	go install \
 		-trimpath \
-		-ldflags="-s -w -X github.com/therootdaemon/hop/version.Version=$(VERSION)" \
+		-ldflags="-s -w -X github.com/therootdaemon/retina/version.Version=$(VERSION)" \
 		.
 
-#
 # Development targets
-#
-
 .PHONY: run
 run: 
 	go run ./main.go
@@ -37,10 +31,7 @@ run:
 tidy:
 	go mod tidy
 
-#
-# Quality targets
-#
-
+# Code Quality targets
 .PHONY: check
 check: fmt lint sec test vet
 
@@ -81,10 +72,7 @@ test:
 vet:
 	go vet $(PKGS)
 
-#
 # Maintanence targets
-#
-
 .PHONY: clean
 clean:
 	rm -rf bin coverage.out
