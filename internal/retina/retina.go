@@ -32,6 +32,22 @@ type Retina struct {
 // The returned cancel function must be called
 // to release the resources associated with the browser context.
 func (r *Retina) SetupBrowser(parent context.Context) (context.Context, context.CancelFunc) {
+	allocCtx, allocCancel := chromedp.NewExecAllocator(parent, r.allocateOptions()...)
+	ctx, timeoutCancel := context.WithTimeout(allocCtx, r.timeout)
+	taskCtx, taskCancel := chromedp.NewContext(ctx)
+
+	cancel := func() {
+		taskCancel()
+		timeoutCancel()
+		allocCancel()
+	}
+
+	return taskCtx, cancel
+}
+
+// allocateOptions returns the Chrome execution options
+// configure for [Retina].
+func (r *Retina) allocateOptions() []chromedp.ExecAllocatorOption {
 	opts := append(
 		chromedp.DefaultExecAllocatorOptions[:],
 
@@ -47,15 +63,5 @@ func (r *Retina) SetupBrowser(parent context.Context) (context.Context, context.
 		opts = append(opts, chromedp.Flag(name, value))
 	}
 
-	allocCtx, allocCancel := chromedp.NewExecAllocator(parent, opts...)
-	ctx, timeoutCancel := context.WithTimeout(allocCtx, r.timeout)
-	taskCtx, taskCancel := chromedp.NewContext(ctx)
-
-	cancel := func() {
-		taskCancel()
-		timeoutCancel()
-		allocCancel()
-	}
-
-	return taskCtx, cancel
+	return opts
 }

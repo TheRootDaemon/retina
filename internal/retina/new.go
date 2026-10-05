@@ -63,9 +63,7 @@ func WithUserAgent(userAgent string) Option {
 // WithFlags configures the Chrome flags used by [Retina].
 func WithFlags(flags map[string]any) Option {
 	return func(r *Retina) {
-		for name, value := range flags {
-			r.flags[name] = value
-		}
+		maps.Copy(r.flags, flags)
 	}
 }
 
