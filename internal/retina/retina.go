@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/chromedp/chromedp"
+	"github.com/therootdaemon/retina/logger"
 )
 
 // Retina represents the main entry point
@@ -27,11 +28,22 @@ type Retina struct {
 // SetupBrowser creates and configures a new browser context
 // using the configuration of [Retina].
 //
-// The returned context is ready for running browser automation tasks.
+// The browser context is stored internally
+// and can be reused by subsequent operations.
 //
-// The returned cancel function must be called
-// to release the resources associated with the browser context.
-func (r *Retina) SetupBrowser(parent context.Context) (context.Context, context.CancelFunc) {
+// [Retina.SetupBrowser] must be called before using browser operations
+// such as [Retina.Search], otherwise the operations might end up using zero values.
+// Call [Retina.Close] to cleanup resources.
+func (r *Retina) SetupBrowser(parent context.Context) {
+	logger.Info(
+		"retina: setting up browser: dimensions=%dx%d timeout=%v user_agent=%s flags=%v",
+		r.width,
+		r.height,
+		r.timeout,
+		r.userAgent,
+		r.flags,
+	)
+
 	allocCtx, allocCancel := chromedp.NewExecAllocator(parent, r.allocateOptions()...)
 	ctx, timeoutCancel := context.WithTimeout(allocCtx, r.timeout)
 	taskCtx, taskCancel := chromedp.NewContext(ctx)
@@ -42,11 +54,26 @@ func (r *Retina) SetupBrowser(parent context.Context) (context.Context, context.
 		allocCancel()
 	}
 
-	return taskCtx, cancel
+	r.ctx = taskCtx
+	r.cancel = cancel
+
+	logger.Info("retina: setup complete")
+}
+
+// Close releases the resources associated with the browser.
+func (r *Retina) Close() {
+	if r.cancel == nil {
+		logger.Debug("retina: browser is not running")
+		return
+	}
+
+	logger.Info("retina: closing browser")
+	r.cancel()
+	logger.Info("retina: browser closed")
 }
 
 // allocateOptions returns the Chrome execution options
-// configure for [Retina].
+// configured for [Retina].
 func (r *Retina) allocateOptions() []chromedp.ExecAllocatorOption {
 	opts := append(
 		chromedp.DefaultExecAllocatorOptions[:],
