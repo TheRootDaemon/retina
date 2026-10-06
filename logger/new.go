@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-// newSugaredLogger builds a *zap.SugaredLogger that writes to w
+// newSugaredLogger builds a *[go.uber.org/zap.SugaredLogger] that writes to the given [io.Writer]
 // at the given minimum level using a human-readable console encoder.
 func newSugaredLogger(w io.Writer, level Level) *zap.SugaredLogger {
 	encoder := zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
@@ -21,7 +21,7 @@ func newSugaredLogger(w io.Writer, level Level) *zap.SugaredLogger {
 	return zap.New(core).Sugar()
 }
 
-// New creates a Logger that writes to w at the given level.
+// New creates a Logger that writes to the given [io.Writer] at the given level.
 func New(level Level, w io.Writer) *Logger {
 	return &Logger{
 		sugar: newSugaredLogger(w, level),
