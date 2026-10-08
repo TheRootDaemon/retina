@@ -16,9 +16,7 @@ const (
 	defaultTimeout = 120 * time.Second
 
 	// defaultUserAgent is the default user agent string used by [Retina].
-	defaultUserAgent = `Mozilla/5.0 (Windows NT 10.0; Win64; x64)
-	AppleWebKit/537.36 (KHTML, like Gecko)
-	Chrome/124.0.0.0 Safari/537.36`
+	defaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
 )
 
 // defaultFlags contains the default Chromium command line flags,
