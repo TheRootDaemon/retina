@@ -17,7 +17,12 @@ func TestDuckDuckGo_Name(t *testing.T) {
 }
 
 func TestDuckDuckGo_BaseURL(t *testing.T) {
-	assert.Equal(t, "https://duckduckgo.com/", duckDuckGo.BaseURL())
+	assert.Equal(t, "https://html.duckduckgo.com/html/", duckDuckGo.BaseURL())
+}
+
+func TestDuckDuckGo_ScrapeScript(t *testing.T) {
+	script := duckDuckGo.ScrapeScript()
+	assert.NotEmpty(t, script)
 }
 
 func TestDuckDuckGo_SearchURL(t *testing.T) {
@@ -29,47 +34,47 @@ func TestDuckDuckGo_SearchURL(t *testing.T) {
 		{
 			name:  "single word",
 			query: "golang",
-			want:  "https://duckduckgo.com/?q=golang",
+			want:  "https://html.duckduckgo.com/html/?q=golang",
 		},
 		{
 			name:  "words",
 			query: "watchman hop retina",
-			want:  "https://duckduckgo.com/?q=watchman+hop+retina",
+			want:  "https://html.duckduckgo.com/html/?q=watchman+hop+retina",
 		},
 		{
 			name:  "empty",
 			query: "",
-			want:  "https://duckduckgo.com/?q=",
+			want:  "https://html.duckduckgo.com/html/?q=",
 		},
 		{
 			name:  "ampersand and equals",
 			query: "a&b=c",
-			want:  "https://duckduckgo.com/?q=a%26b%3Dc",
+			want:  "https://html.duckduckgo.com/html/?q=a%26b%3Dc",
 		},
 		{
 			name:  "plus",
 			query: "c++",
-			want:  "https://duckduckgo.com/?q=c%2B%2B",
+			want:  "https://html.duckduckgo.com/html/?q=c%2B%2B",
 		},
 		{
 			name:  "percent",
 			query: "100%",
-			want:  "https://duckduckgo.com/?q=100%25",
+			want:  "https://html.duckduckgo.com/html/?q=100%25",
 		},
 		{
 			name:  "slash",
 			query: "/slash",
-			want:  "https://duckduckgo.com/?q=%2Fslash",
+			want:  "https://html.duckduckgo.com/html/?q=%2Fslash",
 		},
 		{
 			name:  "non ascii",
 			query: "café",
-			want:  "https://duckduckgo.com/?q=caf%C3%A9",
+			want:  "https://html.duckduckgo.com/html/?q=caf%C3%A9",
 		},
 		{
 			name:  "tab",
 			query: "a\tb",
-			want:  "https://duckduckgo.com/?q=a%09b",
+			want:  "https://html.duckduckgo.com/html/?q=a%09b",
 		},
 	}
 

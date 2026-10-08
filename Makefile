@@ -29,11 +29,11 @@ run:
 
 .PHONY: tidy
 tidy:
-	go mod tidy
+	go mod tidy && cd tests && yarn install
 
 # Code Quality targets
 .PHONY: check
-check: fmt lint sec test vet
+check: fmt lint sec test test-js vet
 
 .PHONY: cover
 cover:
@@ -68,6 +68,10 @@ test:
 	go test -race \
 	$(PKGS_WITH_TESTS) -cover
 
+.PHONY: test-js
+test-js:
+	cd tests && yarn install && yarn test
+
 .PHONY: vet
 vet:
 	go vet $(PKGS)
@@ -75,4 +79,9 @@ vet:
 # Maintanence targets
 .PHONY: clean
 clean:
-	rm -rf bin coverage.out
+	rm -rf \
+		bin \
+		coverage.out \
+		coverage \
+		tests/coverage \
+		tests/node_modules
