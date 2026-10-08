@@ -45,13 +45,7 @@ func (r *Retina) Search(
 
 	results, err := chromedp.Run(
 		r.ctx,
-		chromedp.Evaluate[[]SearchResult](`
-			Array.from(document.querySelectorAll(".result")).map(result => ({
-				title: result.querySelector(".result__a")?.textContent ?? "",
-				url: result.querySelector(".result__a")?.href ?? "",
-				snippet: result.querySelector(".result__snippet")?.textContent ?? "",
-			}))
-		`),
+		chromedp.Evaluate[[]SearchResult](engine.ScrapeScript()),
 	)
 	if err != nil {
 		logger.Error("retina: failed to extract results: %v", err)
