@@ -29,7 +29,7 @@ run:
 
 .PHONY: tidy
 tidy:
-	go mod tidy
+	go mod tidy && cd tests && yarn install
 
 # Code Quality targets
 .PHONY: check
@@ -79,4 +79,9 @@ vet:
 # Maintanence targets
 .PHONY: clean
 clean:
-	rm -rf bin coverage.out
+	rm -rf \
+		bin \
+		coverage.out \
+		coverage \
+		tests/coverage \
+		tests/node_modules
