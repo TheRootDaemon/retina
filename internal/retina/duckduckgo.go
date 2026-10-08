@@ -1,8 +1,9 @@
 package retina
 
-import _ "embed"
-
-import "net/url"
+import (
+	_ "embed"
+	"net/url"
+)
 
 // duckDuckGoBaseURL is the base URL used for DuckDuckGo searches.
 const duckDuckGoBaseURL = "https://html.duckduckgo.com/html/"
@@ -24,7 +25,9 @@ func (d *DuckDuckGo) BaseURL() string { return duckDuckGoBaseURL }
 // that extracts search results from DuckDuckGo's results page.
 //
 // The script evaluates to an array of [SearchResult] objects.
-func (d *DuckDuckGo) ScrapeScript() string { return duckDuckGoScrapeScript }
+func (d *DuckDuckGo) ScrapeScript() string {
+	return evaluateModule(duckDuckGoScrapeScript)
+}
 
 // SearchURL returns a URL for searching the given query on DuckDuckGo.
 func (d *DuckDuckGo) SearchURL(query string) string {
