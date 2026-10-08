@@ -33,7 +33,7 @@ tidy:
 
 # Code Quality targets
 .PHONY: check
-check: fmt lint sec test vet
+check: fmt lint sec test test-js vet
 
 .PHONY: cover
 cover:
@@ -67,6 +67,10 @@ sec:
 test:
 	go test -race \
 	$(PKGS_WITH_TESTS) -cover
+
+.PHONY: test-js
+test-js:
+	cd tests && yarn install && yarn test
 
 .PHONY: vet
 vet:
