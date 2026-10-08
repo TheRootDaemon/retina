@@ -8,7 +8,7 @@ import (
 // duckDuckGoBaseURL is the base URL used for DuckDuckGo searches.
 const duckDuckGoBaseURL = "https://html.duckduckgo.com/html/"
 
-//go:embed duckduckgo.js
+//go:embed scripts/duckduckgo.js
 var duckDuckGoScrapeScript string
 
 // DuckDuckGo represents the DuckDuckGo search engine,

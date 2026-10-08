@@ -34,7 +34,17 @@ func evaluateModule(module string) string {
 	encoded := base64.StdEncoding.EncodeToString([]byte(module))
 
 	return fmt.Sprintf(`
-		import("data:text/javascript;base64,%s")
-			.then(module => module.default())
+(async () => {
+	const source = atob("%s");
+	const blob = new Blob([source], { type: "text/javascript" });
+	const url = URL.createObjectURL(blob);
+
+	try {
+		const module = await import(url);
+		return module.default();
+	} finally {
+		URL.revokeObjectURL(url);
+	}
+})();
 	`, encoded)
 }

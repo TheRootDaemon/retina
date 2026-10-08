@@ -45,7 +45,7 @@ func (r *Retina) Search(
 
 	results, err := chromedp.Run(
 		r.ctx,
-		chromedp.Evaluate[[]SearchResult](engine.ScrapeScript()),
+		chromedp.Evaluate[[]SearchResult](engine.ScrapeScript(), chromedp.EvalAwaitPromise),
 	)
 	if err != nil {
 		logger.Error("retina: failed to extract results: %v", err)
