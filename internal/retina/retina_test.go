@@ -1,6 +1,7 @@
 package retina
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -11,6 +12,26 @@ import (
 
 // baseOptions is the number of default allocator options.
 var baseOptions = len(chromedp.DefaultExecAllocatorOptions) + 5
+
+func TestRetinaSetupBrowser(t *testing.T) {
+	r := New()
+
+	r.SetupBrowser(context.Background())
+	defer r.Close()
+	require.NotNil(t, r.ctx)
+	require.NotNil(t, r.cancel)
+}
+
+func TestRetinaClose(t *testing.T) {
+	r := New()
+	assert.NotPanics(t, func() { r.Close() })
+
+	r.SetupBrowser(context.Background())
+
+	ctx := r.ctx
+	r.Close()
+	assert.ErrorIs(t, ctx.Err(), context.Canceled)
+}
 
 func TestRetina_allocateOptions(t *testing.T) {
 	tests := []struct {
