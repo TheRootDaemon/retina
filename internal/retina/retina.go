@@ -68,7 +68,14 @@ func (r *Retina) Close() {
 	}
 
 	logger.Info("retina: closing browser")
+
 	r.cancel()
+
+	// reset context and cancellation to their zero values,
+	// to ensure that the browser no longer exists
+	r.ctx = nil
+	r.cancel = nil
+
 	logger.Info("retina: browser closed")
 }
 
