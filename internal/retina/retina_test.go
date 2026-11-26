@@ -1,6 +1,7 @@
 package retina
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -11,6 +12,47 @@ import (
 
 // baseOptions is the number of default allocator options.
 var baseOptions = len(chromedp.DefaultExecAllocatorOptions) + 5
+
+func TestRetinaClose(t *testing.T) {
+	t.Run("close with setup", func(t *testing.T) {
+		r := &Retina{
+			width:     1920,
+			height:    1080,
+			timeout:   30 * time.Second,
+			userAgent: "RetinaIntegrationTest/1.0",
+		}
+
+		r.SetupBrowser(context.Background())
+
+		// context, cancellation should not be nil after initialization
+		require.NotNil(t, r.ctx)
+		require.NotNil(t, r.cancel)
+
+		require.NotPanics(t, r.Close)
+
+		// context, cancellation must be nil after cleaning up the browser
+		require.Nil(t, r.ctx)
+		require.Nil(t, r.cancel)
+	})
+
+	t.Run("close without setup", func(t *testing.T) {
+		r := &Retina{}
+		require.NotPanics(t, r.Close)
+	})
+
+	t.Run("close twice", func(t *testing.T) {
+		r := &Retina{
+			width:   1920,
+			height:  1080,
+			timeout: 30 * time.Second,
+		}
+
+		r.SetupBrowser(context.Background())
+
+		require.NotPanics(t, r.Close)
+		require.NotPanics(t, r.Close)
+	})
+}
 
 func TestRetina_allocateOptions(t *testing.T) {
 	tests := []struct {
