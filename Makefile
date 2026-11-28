@@ -29,7 +29,7 @@ run:
 
 .PHONY: tidy
 tidy:
-	go mod tidy && cd tests && yarn install
+	go mod tidy && cd tests && pnpm install
 
 # Code Quality targets
 .PHONY: check
@@ -70,7 +70,7 @@ test:
 
 .PHONY: test-js
 test-js:
-	cd tests && yarn install && yarn test
+	cd tests && pnpm install && pnpm test
 
 .PHONY: vet
 vet:

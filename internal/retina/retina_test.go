@@ -14,23 +14,104 @@ import (
 var baseOptions = len(chromedp.DefaultExecAllocatorOptions) + 5
 
 func TestRetinaSetupBrowser(t *testing.T) {
-	r := New()
+	const timeout = 30 * time.Second
+
+	r := New(
+		WithUserAgent("MockRetina/1.0"),
+		WithWindowSize(800, 600),
+		WithTimeout(30*time.Second),
+	)
 
 	r.SetupBrowser(context.Background())
-	defer r.Close()
-	require.NotNil(t, r.ctx)
-	require.NotNil(t, r.cancel)
+	t.Cleanup(func() { assert.NotPanics(t, r.Close) })
+
+	require.NoError(t, chromedp.Do(r.ctx, chromedp.Navigate("about:blank")))
+
+	t.Run("context not nil", func(t *testing.T) {
+		require.NotNil(t, r.ctx)
+		require.NotNil(t, r.cancel)
+	})
+
+	t.Run("context deadline", func(t *testing.T) {
+		deadline, ok := r.ctx.Deadline()
+		require.True(t, ok)
+		assert.WithinDuration(
+			t,
+			time.Now().Add(30*time.Second),
+			deadline,
+			5*time.Second,
+		)
+	})
+
+	t.Run("browser window size", func(t *testing.T) {
+		got, err := chromedp.Run(
+			r.ctx,
+			chromedp.Evaluate[struct {
+				Width  int `json:"width"`
+				Height int `json:"height"`
+			}](`({
+				width: window.innerWidth,
+				height: window.innerHeight,
+			})`),
+		)
+
+		require.NoError(t, err)
+		assert.Equal(t, 800, got.Width)
+		assert.Equal(t, 600, got.Height)
+	})
+
+	t.Run("brower user agent", func(t *testing.T) {
+		got, err := chromedp.Run(
+			r.ctx,
+			chromedp.Evaluate[struct {
+				UserAgent string `json:"userAgent"`
+			}](`({ userAgent: navigator.userAgent })`),
+		)
+
+		require.NoError(t, err)
+		assert.Equal(t, "MockRetina/1.0", got.UserAgent)
+	})
 }
 
 func TestRetinaClose(t *testing.T) {
-	r := New()
-	assert.NotPanics(t, func() { r.Close() })
+	t.Run("close with setup", func(t *testing.T) {
+		r := &Retina{
+			width:     1920,
+			height:    1080,
+			timeout:   30 * time.Second,
+			userAgent: "RetinaIntegrationTest/1.0",
+		}
 
-	r.SetupBrowser(context.Background())
+		r.SetupBrowser(context.Background())
 
-	ctx := r.ctx
-	r.Close()
-	assert.ErrorIs(t, ctx.Err(), context.Canceled)
+		// context, cancellation should not be nil after initialization
+		require.NotNil(t, r.ctx)
+		require.NotNil(t, r.cancel)
+
+		require.NotPanics(t, r.Close)
+
+		// context, cancellation must be nil after cleaning up the browser
+		require.Nil(t, r.ctx)
+		require.Nil(t, r.cancel)
+	})
+
+	t.Run("close without setup", func(t *testing.T) {
+		r := &Retina{}
+		require.NotPanics(t, r.Close)
+	})
+
+	t.Run("close twice", func(t *testing.T) {
+		r := &Retina{
+			width:   1920,
+			height:  1080,
+			timeout: 30 * time.Second,
+		}
+
+		r.SetupBrowser(context.Background())
+
+		require.NotPanics(t, r.Close)
+		require.NotPanics(t, r.Close)
+	})
 }
 
 func TestRetina_allocateOptions(t *testing.T) {
