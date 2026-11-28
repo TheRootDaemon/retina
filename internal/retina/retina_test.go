@@ -13,6 +13,66 @@ import (
 // baseOptions is the number of default allocator options.
 var baseOptions = len(chromedp.DefaultExecAllocatorOptions) + 5
 
+func TestRetinaSetupBrowser(t *testing.T) {
+	const timeout = 30 * time.Second
+
+	r := New(
+		WithUserAgent("MockRetina/1.0"),
+		WithWindowSize(800, 600),
+		WithTimeout(30*time.Second),
+	)
+
+	r.SetupBrowser(context.Background())
+	t.Cleanup(func() { assert.NotPanics(t, r.Close) })
+
+	require.NoError(t, chromedp.Do(r.ctx, chromedp.Navigate("about:blank")))
+
+	t.Run("context not nil", func(t *testing.T) {
+		require.NotNil(t, r.ctx)
+		require.NotNil(t, r.cancel)
+	})
+
+	t.Run("context deadline", func(t *testing.T) {
+		deadline, ok := r.ctx.Deadline()
+		require.True(t, ok)
+		assert.WithinDuration(
+			t,
+			time.Now().Add(30*time.Second),
+			deadline,
+			5*time.Second,
+		)
+	})
+
+	t.Run("browser window size", func(t *testing.T) {
+		got, err := chromedp.Run(
+			r.ctx,
+			chromedp.Evaluate[struct {
+				Width  int `json:"width"`
+				Height int `json:"height"`
+			}](`({
+				width: window.innerWidth,
+				height: window.innerHeight,
+			})`),
+		)
+
+		require.NoError(t, err)
+		assert.Equal(t, 800, got.Width)
+		assert.Equal(t, 600, got.Height)
+	})
+
+	t.Run("brower user agent", func(t *testing.T) {
+		got, err := chromedp.Run(
+			r.ctx,
+			chromedp.Evaluate[struct {
+				UserAgent string `json:"userAgent"`
+			}](`({ userAgent: navigator.userAgent })`),
+		)
+
+		require.NoError(t, err)
+		assert.Equal(t, "MockRetina/1.0", got.UserAgent)
+	})
+}
+
 func TestRetinaClose(t *testing.T) {
 	t.Run("close with setup", func(t *testing.T) {
 		r := &Retina{
